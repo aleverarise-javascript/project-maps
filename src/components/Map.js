@@ -13,12 +13,36 @@ class Map extends Component {
             interval: '',
             actualPosition: 0,
             currentLat: this.props.centerMapCoordinates[0],
-            currentLng: this.props.centerMapCoordinates[1]
+            currentLng: this.props.centerMapCoordinates[1],
+            autoPlay: true
         }
     }
 
+    onPlay = () => {
+        this.setState( { autoPlay: true } )
+    }
+
+    onStop = () => {
+        this.setState( { autoPlay: false } )
+    }
+
+    onNext = () => {
+        this.updateStates(this.state.actualPosition + 1 < this.state.markers.length ? this.state.actualPosition + 1 : 0, this.state.markers[this.state.actualPosition].lat, this.state.markers[this.state.actualPosition].lng);
+    }
+
+    onPrevious = () => {
+        let newPosition;
+
+        if(this.state.actualPosition - 1 < this.state.markers.length && this.state.actualPosition - 1 > 0){
+            newPosition = this.state.actualPosition - 1;
+        }else{
+            newPosition = 0;
+        }
+        this.updateStates(newPosition, this.state.markers[this.state.actualPosition].lat, this.state.markers[this.state.actualPosition].lng);
+    }
+
     componentDidMount() {
-        let interval = setInterval(this.timer, 3000);
+        let interval = setInterval(this.timer, 10000);
         this.setState({ interval });
     }
 
@@ -26,13 +50,17 @@ class Map extends Component {
         clearInterval(this.state.interval);
     }
 
+    updateStates(position, lat, lng ){
+        this.setState({
+            actualPosition: position,
+            currentLat: lat,
+            currentLng: lng
+        });
+    }
+
     timer = () => {
         const { markers, actualPosition } = this.state
-        this.setState({
-            actualPosition: actualPosition + 1 < markers.length ? actualPosition + 1 : 0,
-            currentLat: markers[actualPosition].lat,
-            currentLng: markers[actualPosition].lng
-        })
+        this.updateStates(actualPosition + 1 < markers.length ? actualPosition + 1 : 0, markers[actualPosition].lat, markers[actualPosition].lng);
     }
     
     render() {
@@ -55,7 +83,10 @@ class Map extends Component {
         const MyMapComponent = withGoogleMap((props) => 
             <GoogleMap
                 defaultZoom={4}
-                defaultCenter={ { lat: this.state.currentLat, lng: this.state.currentLng} }
+                defaultCenter={ 
+                    this.state.autoPlay ? { lat: this.state.currentLat, lng: this.state.currentLng }
+                    : { lat: this.props.centerMapCoordinates[0], lng: this.props.centerMapCoordinates[1] }
+                }
                 defaultTitle="Mapa"
 
             >
